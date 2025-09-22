@@ -19,16 +19,19 @@ def callback_root():
 
     resp = requests.post(
         "https://api.schwabapi.com/v1/oauth/token",
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        headers={
+            "Authorization": f"Basic {basic}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
         data={
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": "https://autotrade-production-2561.up.railway.app/",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
+            "redirect_uri": "https://autotrade-production-2561.up.railway.app/",  # MUST match exactly what you registered
         },
         timeout=30,
     )
+    print(resp.status_code, resp.text)  # keep while debugging
+    resp.raise_for_status()
     return resp.json()
 
 
