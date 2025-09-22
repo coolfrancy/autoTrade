@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import requests
 
+
 #initialize flask app
 app = Flask(__name__)
 
@@ -16,23 +17,20 @@ def callback_root():
     if not code:
         return "No ?code=... in query string", 400
 
-
+    
     resp = requests.post(
         "https://api.schwabapi.com/v1/oauth/token",
-        headers={
-            "Authorization": f"Basic {basic}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
         data={
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": "https://autotrade-production-2561.up.railway.app/",  # MUST match exactly what you registered
+            "redirect_uri": "https://autotrade-production-2561.up.railway.app/",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
         timeout=30,
     )
-    print(resp.status_code, resp.text)  # keep while debugging
-    resp.raise_for_status()
-    return resp.json()
+    return resp.json() + "      " + "client_id: " + CLIENT_ID + "    client_sc: " + client_secret
 
 
 if __name__ == "__main__":
