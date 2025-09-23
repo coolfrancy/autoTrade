@@ -41,7 +41,7 @@ def callback_root():
         timeout=30,
     )
 
-    return resp.json() + "      " + "client_id: " + CLIENT_ID + "    client_sc: " + CLIENT_SECRET
+    return resp.json()
 
 
 if __name__ == "__main__":
