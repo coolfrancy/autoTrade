@@ -24,7 +24,7 @@ def callback_root():
     if not qCode:
         return "No ?code=... in query string", 400
 
-    code = unquote(code)
+    code = unquote(qcode)
     basic = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
 
     resp = requests.post(
