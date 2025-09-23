@@ -1,15 +1,13 @@
 from flask import Flask, request
-import os
+import os, base64, requests
 from dotenv import load_dotenv
-import requests
 from urllib.parse import unquote
-
-
 
 #initialize flask app
 app = Flask(__name__)
 
 #get env variables
+load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
@@ -24,7 +22,7 @@ def callback_root():
     if not qCode:
         return "No ?code=... in query string", 400
 
-    code = unquote(qcode)
+    code = unquote(qCode)
     basic = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
 
     resp = requests.post(
