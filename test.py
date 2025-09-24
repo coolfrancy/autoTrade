@@ -1,31 +1,55 @@
 import requests
-import base64
-import requests
-from urllib.parse import unquote
+import pandas as pd
+import pandas_ta as ta
+import matplotlib.pyplot as plt 
 
 
-TOKEN_URL   = "https://api.schwabapi.com/v1/oauth/token"
-REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/"  # must match portal exactly
-CLIENT_ID    = "cEgE4lrkL8AobSvVITK9RqgnX8nGAblVKV4b53WALa6AVDhN"
-CLIENT_SECRET= "ZbhsB1tZglPD6bdL4ykJNIvj6XxiVTiaSPDIwBqgGD5zbKnuFnhpivXQAj1vCmkO"
+ACCESS_TOKEN = "I0.b2F1dGgyLmNkYy5zY2h3YWIuY29t.6QrmpkezSmhHHcP7eAiS69ZQYpBjRXwvpKMOPmR7xfE@"
+
+url = "https://api.schwabapi.com/marketdata/v1/pricehistory"
+
+headers = {
+    "Authorization": f"Bearer {ACCESS_TOKEN}"
+}
+
+params = {
+    "symbol": "SPY",
+    "periodType": "year",     # must be month or year if you want daily bars
+    "period": 1,               # 1 month window
+    "frequencyType": "daily",  # daily bars
+    "frequency": 1,            # every 1 day
+    "needExtendedHoursData": "false",
+    "needPreviousClose": "false"
+}
 
 
-code = unquote("C0.b2F1dGgyLmJkYy5zY2h3YWIuY29t.JpHK6zEu5sOdps3z26NUINlIFWdfIt5tLsgDG0Ag-1c%40")                 # converts %40 -> "@"
+resp = requests.get(url, headers=headers, params=params, timeout=30)
 
-basic = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
+print(resp.status_code)
+resp_json = resp.json()
 
-resp = requests.post(
-    TOKEN_URL,
-    headers={
-        "Authorization": f"Basic {basic}",
-        "Content-Type": "application/x-www-form-urlencoded",
-    },
-    data={
-        "grant_type": "authorization_code",
-        "code": code,                     # ONLY the code value, no "&session=..."
-        "redirect_uri": REDIRECT_URI,     # exact string as registered
-    },
-    timeout=30,
-)
+#convert candles to dataframe
+df = pd.DataFrame(resp_json["candles"])
 
-print(resp.status_code, resp.text)
+#convers datetime (ms since epoch/1970) -> readable timetamp
+df["datetime"] = pd.to_datetime(df["datetime"], unit="ms", utc=True)
+
+#Make datetime the index
+df.set_index("datetime", inplace=True)
+
+###insert strategy
+#add a 200-period SMA on the close price 
+df["SMA_200"] = ta.sma(df["close"], length=200)
+####
+
+print(df.tail())
+print(len(df['open']))
+
+
+#plot close price with sma
+plt.figure(figsize=(10,5))
+plt.plot(df.index, df["close"], label="close")
+plt.plot(df.index, df["SMA_200"], label="SMA 20")
+plt.legend()
+plt.title("Apple with 20-period SMA")
+plt.savefig("chart.png", dpi=300, bbox_inches="tight")
