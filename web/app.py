@@ -14,7 +14,8 @@ ACC_APP_KEY = os.getenv("ACC_APP_KEY")
 ACC_SECRET_KEY = os.getenv("ACC_SECRET_KEY")
 
 TOKEN_URL   = "https://api.schwabapi.com/v1/oauth/token"
-REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/"
+DATA_REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/data"
+ACC_REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/acc"
 
 
 @app.route("/")
@@ -41,7 +42,7 @@ def data_callback_root():
         data={
             "grant_type": "authorization_code",
             "code": code,                     # ONLY the code value, no "&session=..."
-            "redirect_uri": REDIRECT_URI,     # exact string as registered
+            "redirect_uri": DATA_REDIRECT_URI,     # exact string as registered
         },
         timeout=30,
     )
@@ -68,7 +69,7 @@ def acc_call_root():
         data={
             "grant_type": "authorization_code",
             "code": code,                     # ONLY the code value, no "&session=..."
-            "redirect_uri": REDIRECT_URI,     # exact string as registered
+            "redirect_uri": ACC_REDIRECT_URI,     # exact string as registered
         },
         timeout=30,
     )
