@@ -3,11 +3,11 @@ from dotenv import load_dotenv
 import requests
 
 load_dotenv()
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACC_ACCESS_TOKEN = os.getenv("ACC_ACCESS_TOKEN")
 
 url = "https://api.schwabapi.com/trader/v1/accounts"
 headers = {
-    "Authorization": f"Bearer {ACCESS_TOKEN}"
+    "Authorization": f"Bearer {ACC_ACCESS_TOKEN}"
 }
 
 
