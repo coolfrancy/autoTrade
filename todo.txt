@@ -1,6 +1,8 @@
 i would have 1 for the specific script,, one that shows the buy and sell signals
 create auto
 
+--on the app, create a login function which takes the keys so i dont have duplicate codes.
+
 --later-- get the auto attach to channel working to get real time data, 
 
 create a def for getting the info from charles
@@ -12,4 +14,4 @@ create a def for strategies
 create one for plotting it 
 
 
-i will create a class which will be able to have methods to see the chart, all classes will need parameter for its timeframe which will be editable later, the class will be able to see the char include its one strategy in it using that get class, the class will also have methods fr getting data, i can call it get info cdata class
+

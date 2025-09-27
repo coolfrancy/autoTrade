@@ -1,11 +1,10 @@
 import requests
 import pandas as pd
-import pandas_ta as ta
 import matplotlib.pyplot as plt 
 
 
 def get_candles(
-    access_token: str, 
+    DATA_ACCESS_TOKEN: str, 
     symbol: str, period_type: str, 
     frequency_type: str, 
     period: int = 1, 
@@ -24,7 +23,7 @@ def get_candles(
     url = "https://api.schwabapi.com/marketdata/v1/pricehistory"
 
     headers = {
-        "Authorization": f"Bearer {access_token}"
+        "Authorization": f"Bearer {DATA_ACCESS_TOKEN}"
     }
 
     params = {
@@ -51,3 +50,32 @@ def get_candles(
     df.set_index("datetime", inplace=True)
 
     return df
+
+def plot(df, show_strategy: bool = False, filename: str = "chart.png"):
+    """
+    Plot close price and optionally overlay strategy buy/sell signals.
+    Expects df to have a 'close' column, and if show_strategy=True,
+    also a 'strategy' column with values like 'buy', 'sell', or None.
+    """
+    plt.figure(figsize=(10, 5))
+
+    # Always plot close price
+    plt.plot(df.index, df["close"], label="Close", color="blue")
+
+    if show_strategy and "strategy" in df.columns:
+        # Plot buy signals
+        buys = df[df["strategy"] == "buy"]
+        plt.scatter(buys.index, buys["close"], marker="^", color="green", label="Buy", s=100)
+
+        # Plot sell signals
+        sells = df[df["strategy"] == "sell"]
+        plt.scatter(sells.index, sells["close"], marker="v", color="red", label="Sell", s=100)
+
+    plt.legend()
+    plt.title("Strategy Chart")
+    plt.savefig(filename, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+if __name__ == "__main__":
+    get_candles()
