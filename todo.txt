@@ -13,5 +13,6 @@ create a def for strategies
 
 create one for plotting it 
 
+--add websocket to the login
 
 
