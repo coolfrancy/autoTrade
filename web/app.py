@@ -14,7 +14,7 @@ ACC_APP_KEY = os.getenv("ACC_APP_KEY")
 ACC_SECRET_KEY = os.getenv("ACC_SECRET_KEY")
 
 TOKEN_URL   = "https://api.schwabapi.com/v1/oauth/token"
-DATA_REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/data/"
+DATA_REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/data"
 ACC_REDIRECT_URI = "https://autotrade-production-2561.up.railway.app/acc"
 
 
