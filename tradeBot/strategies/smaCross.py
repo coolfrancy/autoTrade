@@ -34,4 +34,5 @@ if __name__ == "__main__":
 
     df = get_candles(DATA_ACCESS_TOKEN, symbol, period_type, frequency_type, period=10)
     dfStrat = above_200_sma(df)
+    print(dfStrat)
     plot(dfStrat, True)

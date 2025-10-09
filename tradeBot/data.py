@@ -1,55 +1,58 @@
 import requests
 import pandas as pd
+from zoneinfo import ZoneInfo
 import matplotlib.pyplot as plt 
 
 
+ET = ZoneInfo("America/New_York")
+
 def get_candles(
-    DATA_ACCESS_TOKEN: str, 
-    symbol: str, period_type: str, 
-    frequency_type: str, 
-    period: int = 1, 
-    frequency: int = 1, 
-    need_extended_hours_data: bool = False) -> pd.DataFrame:
-
-    """
-    Ping the Charles Schwab API for historical candles
-    and return a normalized DataFrame with datetime index.
-    
-    Returns a DataFrame with columns:
-    ['open', 'high', 'low', 'close', 'volume']
-    indexed by UTC datetime.
-    """
-
+    data_access_token: str,
+    symbol: str,
+    period_type: str,
+    frequency_type: str,
+    period: int = 1,
+    frequency: int = 1,
+    need_extended_hours_data: bool = False,
+) -> pd.DataFrame:
+    """Fetch Schwab candles → DataFrame with ET DatetimeIndex and numeric OHLCV."""
     url = "https://api.schwabapi.com/marketdata/v1/pricehistory"
-
-    headers = {
-        "Authorization": f"Bearer {DATA_ACCESS_TOKEN}"
-    }
-
+    headers = {"Authorization": f"Bearer {data_access_token}"}
     params = {
         "symbol": symbol,
-        "periodType": period_type,     # must be month or year if you want daily bars
-        "period": period,               # 1 month window
-        "frequencyType": frequency_type,  # daily bars
-        "frequency": frequency,            # every 1 day
-        "needExtendedHoursData": str(need_extended_hours_data).lower()
+        "periodType": period_type,
+        "period": period,
+        "frequencyType": frequency_type,
+        "frequency": frequency,
+        "needExtendedHoursData": str(need_extended_hours_data).lower(),
     }
 
     resp = requests.get(url, headers=headers, params=params, timeout=30)
     resp.raise_for_status()
-    
-    resp_json = resp.json()
+    data = resp.json()
 
-    #convert candles to dataframe
-    df = pd.DataFrame(resp_json["candles"])
+    if "candles" not in data:
+        raise ValueError(f"Unexpected response (no 'candles'): {data}")
 
-    #convers datetime (ms since epoch/1970) -> readable timetamp
+    candles = data["candles"]
+    if not candles:
+        # Return an empty, well-typed frame rather than crashing later
+        cols = ["open", "high", "low", "close", "volume"]
+        return pd.DataFrame(columns=cols, index=pd.DatetimeIndex([], tz=ET))
+
+    df = pd.DataFrame(candles)
+    # Ensure numeric types (the API is usually numeric, but be defensive)
+    for col in ("open", "high", "low", "close", "volume"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # datetime is epoch ms UTC → tz-aware
     df["datetime"] = pd.to_datetime(df["datetime"], unit="ms", utc=True)
-
-    #Make datetime the index
     df.set_index("datetime", inplace=True)
 
-    return df
+    # Convert to ET for your downstream logic
+    df = df.tz_convert(ET)
+    return df.sort_index()
+
 
 def plot(df, show_strategy: bool = False, filename: str = "chart.png"):
     """

@@ -1,3 +1,14 @@
+frequencyType =
+
+if day → only minute is valid
+
+if month → daily or weekly
+
+if year → daily, weekly, monthly
+
+if ytd → daily, weekly
+
+
 i would have 1 for the specific script,, one that shows the buy and sell signals
 create auto
 
@@ -7,12 +18,6 @@ create auto
 
 create a def for getting the info from charles
 
-ctreate a def for making it into a database using database
 
-create a def for strategies
-
-create one for plotting it 
-
---add websocket to the login
-
-
+--recreate sndbx2
+--fix atr function 
