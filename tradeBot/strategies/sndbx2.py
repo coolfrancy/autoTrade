@@ -30,54 +30,16 @@ def rsi_wilder(close: pd.Series, period: int = 14) -> pd.Series:
     rs = gain / loss.replace(0, np.nan)
     return 100 - (100 / (1 + rs))
 
-def sma(series: pd.Series, length: int) -> pd.Series:
-    return series.rolling(length, min_periods=length).mean()
-
-# --- ThinkScript time helpers replicated on ET clock ---
-def seconds_from_time(idx_utc: pd.DatetimeIndex, hhmm: int) -> pd.Series:
-    # positive after the moment of hh:mm, negative before; 0 exactly at hh:mm
-    et = idx_utc.tz_convert(ET)
-    hh, mm = divmod(hhmm, 100)
-    target = et.normalize() + pd.to_timedelta(hh, "h") + pd.to_timedelta(mm, "m")
-    return (et - target).total_seconds()
-
-def seconds_till_time(idx_utc: pd.DatetimeIndex, hhmm: int) -> pd.Series:
-    et = idx_utc.tz_convert(ET)
-    hh, mm = divmod(hhmm, 100)
-    target = et.normalize() + pd.to_timedelta(hh, "h") + pd.to_timedelta(mm, "m")
-    return (target - et).total_seconds()
 
 def translate_strategy(df: pd.DataFrame) -> pd.DataFrame:
-    if df.index.tzinfo is None:
-        raise ValueError("Index must be timezone-aware (UTC).")
-
     out = df.copy()
 
-    # Inputs/constants from your script
-    marketopen   = 930
-    marketclose  = 1557
     pt = 2.0
     stop_loss_percentage = 0.9
-    PositionSize = 300
-    PositionSize_half = 150
 
     # Plots/indicators
-    out["SMA_200"] = sma(out["close"], 200)
     out["ATR_14"]  = atr_wilder(out, 14)
     out["RSI_14"]  = rsi_wilder(out["close"], 14)
-
-    # Time conditions (ThinkScript semantics)
-    begin = seconds_from_time(out.index, marketopen)         # > 0 after 09:30
-    end   = seconds_till_time(out.index, marketclose)        # > 0 before 15:57
-
-    eod = end < 121                                          # last 121 seconds before 15:57
-    tradingday = (begin > 0) & (end > 0)                     # between 09:30 and 15:57
-
-    powerOpen = (seconds_from_time(out.index, 930) >= 0) & (seconds_till_time(out.index, 1000) > 0)   # [09:30,10:00)
-    powerEnd  = (seconds_from_time(out.index, 1500) >= 0) & (seconds_till_time(out.index, 1530) > 0)  # [15:00,15:30)
-
-    # Buying power threshold reused in labels
-    buyingpower = 3000 / out["close"]
 
     # Stop based on ATR
     # stop_loss_distance = ATR * stop_loss_percentage
@@ -88,8 +50,9 @@ def translate_strategy(df: pd.DataFrame) -> pd.DataFrame:
     is_bullish = out["close"] > out["close"].shift(1)
     meets_volume_requirement = out["volume"] > (3000 / out["close"]) * 100
     meets_rsi_requirement = (out["RSI_14"] - out["RSI_14"].shift(1)) > 10
-    should_enter = (is_bullish & meets_volume_requirement & meets_rsi_requirement) & (powerOpen | powerEnd)
+    should_enter = (is_bullish & meets_volume_requirement & meets_rsi_requirement)
 
+#///
     # Edit rules (not used in final exits per your code, but computed for parity)
     price_diff = out["high"] - np.nan  # depends on EntryPrice; set in loop for exact value per bar
     meets_close_requirement = out["close"] < out["low"].shift(1)
@@ -136,10 +99,6 @@ def translate_strategy(df: pd.DataFrame) -> pd.DataFrame:
                 in_pos = False
                 out.iat[i, out.columns.get_loc("strategy")] = "sell"
                 entry = np.nan
-
-    # Optional: columns that mimic your labels’ underlying values (for debugging or UI)
-    out["label_volume_x100_ok"] = out["volume"] > (buyingpower / out["close"]) * 100
-    out["label_rsi_diff"] = (out["RSI_14"] - out["RSI_14"].shift(1)).round(1)
 
     return out
 

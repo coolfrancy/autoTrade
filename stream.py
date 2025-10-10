@@ -5,7 +5,7 @@ import asyncio
 from dotenv import load_dotenv
 import pandas as pd
 from datetime import datetime
-from atrFunction import atr_wilder
+from functions import atr_wilder, rsi_wilder
 
 load_dotenv()
 
@@ -48,14 +48,17 @@ async def run_stream():
                 'volume': item.get('VOLUME', 0)
             }])
 
-            if len(bars_df) >= 1:
-                new_bar["atr"] = atr_wilder(bars_df, 2)
-            
-            bars_df = pd.concat([bars_df, new_bar], ignore_index=True)
-            
-            # Print summary
-            print(f"Total bars: {len(bars_df)}")
-            print(bars_df.tail())  # Show last 5 bars
+        # Append the new bar first
+        bars_df = pd.concat([bars_df, new_bar], ignore_index=True)
+
+        # Compute functions over the updated DataFrame
+        bars_df['atr'] = atr_wilder(bars_df, 2)
+        bars_df["rsi"] = rsi_wilder(bars_df["close"], 2)
+
+        
+        # Print summary
+        print(f"Total bars: {len(bars_df)}")
+        print(bars_df.tail())  # Show last 5 bars
 
     await stream.login()
     stream.add_chart_equity_handler(on_bar)
